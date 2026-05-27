@@ -1,5 +1,4 @@
 const express = require('express');
-const cors = require('cors');
 const dotenv = require('dotenv');
 const connectDB = require('./config/db');
 
@@ -11,18 +10,26 @@ connectDB();
 
 const app = express();
 
+const ALLOWED_ORIGINS = [
+  'https://kvsdashboard-cbvk.vercel.app',
+  'http://localhost:5173',
+  'http://localhost:3000'
+];
+
 // Middleware
-app.use(cors({
-  origin: [
-    'https://kvsdashboard-cbvk.vercel.app',
-    'http://localhost:5173',
-    'http://localhost:3000'
-  ],
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
-app.options('*', cors());
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (ALLOWED_ORIGINS.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(204);
+  }
+  next();
+});
 app.use(express.json());
 
 // Routes
