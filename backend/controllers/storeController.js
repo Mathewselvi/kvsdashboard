@@ -33,7 +33,7 @@ exports.deleteSeller = async (req, res) => {
 // --- RAW PURCHASE ---
 exports.getPurchases = async (req, res) => {
   try {
-    const purchases = await RawPurchase.find().populate('seller').sort({ date: -1 });
+    const purchases = await RawPurchase.find().sort({ date: -1 });
     res.json(purchases);
   } catch (error) { res.status(500).json({ message: error.message }); }
 };
@@ -45,6 +45,15 @@ exports.addPurchase = async (req, res) => {
 };
 exports.updatePurchase = async (req, res) => {
   try {
+    if (req.body.rawWeightKG !== undefined || req.body.ratePerKG !== undefined) {
+      const existing = await RawPurchase.findById(req.params.id);
+      if (existing) {
+        const wt = req.body.rawWeightKG !== undefined ? Number(req.body.rawWeightKG) : existing.rawWeightKG;
+        const rate = req.body.ratePerKG !== undefined ? Number(req.body.ratePerKG) : existing.ratePerKG;
+        req.body.totalAmount = wt * rate;
+        req.body.dryingCost = wt * 12;
+      }
+    }
     const purchase = await RawPurchase.findByIdAndUpdate(req.params.id, req.body, { new: true });
     res.json(purchase);
   } catch (error) { res.status(500).json({ message: error.message }); }

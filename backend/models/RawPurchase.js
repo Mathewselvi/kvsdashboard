@@ -1,10 +1,15 @@
 const mongoose = require('mongoose');
 
 const rawPurchaseSchema = new mongoose.Schema({
-  seller: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Seller',
+  sellerName: {
+    type: String,
     required: true,
+  },
+  sellerContact: {
+    type: String,
+  },
+  sellerAddress: {
+    type: String,
   },
   rawWeightKG: {
     type: Number,

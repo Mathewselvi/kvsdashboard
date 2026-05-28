@@ -3,18 +3,20 @@ const mongoose = require('mongoose');
 const labourSchema = new mongoose.Schema({
   workerName: {
     type: String,
-    required: true,
+    default: 'Group Labour',
   },
   plantationName: {
     type: String,
-  },
-  dailyWage: {
-    type: Number,
     required: true,
   },
-  daysWorked: {
+  numberOfWorkers: {
     type: Number,
+    required: true,
     default: 1,
+  },
+  perHeadAmount: {
+    type: Number,
+    required: true,
   },
   totalWage: {
     type: Number,
@@ -31,7 +33,7 @@ const labourSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 labourSchema.pre('save', async function () {
-  this.totalWage = this.dailyWage * this.daysWorked;
+  this.totalWage = (this.numberOfWorkers || 1) * (this.perHeadAmount || 0);
 });
 
 module.exports = mongoose.model('Labour', labourSchema);

@@ -62,6 +62,8 @@ const StoreReport = () => {
   }
 
   const { summary, transactions = [], dailyTrends = [] } = data || {};
+  const totalCardamomKG = data?.raw?.rawPurchases?.reduce((s, p) => s + (p.rawWeightKG || 0), 0) || 0;
+
   const filteredTransactions = transactions.filter(t => 
     t.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     t.category?.toLowerCase().includes(searchQuery.toLowerCase())
@@ -80,15 +82,15 @@ const StoreReport = () => {
           <p className="text-[12px] font-mono text-genesis-textSub mt-0.5">{new Date(tx.date).toLocaleDateString()}</p>
         </div>
         <span className={`px-2.5 py-0.5 text-[10px] rounded-full font-bold uppercase tracking-wider ${
-          tx.category === 'Income' ? 'bg-green-50 text-green-600' : 'bg-orange-50 text-orange-600'
+          ['Income', 'Drying'].includes(tx.category) ? 'bg-green-50 text-green-600' : 'bg-orange-50 text-orange-600'
         }`}>
-          {tx.category === 'Income' ? 'SALE' : 'PURCHASE'}
+          {tx.category === 'Income' ? 'SALE' : (tx.category === 'Drying' ? 'DRYING' : 'EXPENSE')}
         </span>
       </div>
       <div className="flex justify-between text-[13px]">
         <span className="text-genesis-textSub">Amount</span>
-        <span className={`font-mono font-bold ${tx.category === 'Income' ? 'text-genesis-success' : 'text-genesis-error'}`}>
-          {tx.category === 'Income' ? '+' : '-'}{fmt(tx.amount)}
+        <span className={`font-mono font-bold ${['Income', 'Drying'].includes(tx.category) ? 'text-genesis-success' : 'text-genesis-error'}`}>
+          {['Income', 'Drying'].includes(tx.category) ? '+' : '-'}{fmt(tx.amount)}
         </span>
       </div>
       <div className="flex justify-between text-[13px]">
@@ -157,14 +159,18 @@ const StoreReport = () => {
       </div>
 
       {/* Store KPIs */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4">
         <div className="bg-white p-6 rounded-[24px] border border-genesis-border shadow-sm">
-          <p className="text-[10px] font-bold text-genesis-textSub uppercase tracking-wider mb-1">Total Sales</p>
+          <p className="text-[10px] font-bold text-genesis-textSub uppercase tracking-wider mb-1">Total Revenue</p>
           <h3 className="text-2xl font-display font-bold text-genesis-textMain">{fmt(summary?.totalRevenue)}</h3>
         </div>
         <div className="bg-white p-6 rounded-[24px] border border-genesis-border shadow-sm">
-          <p className="text-[10px] font-bold text-genesis-textSub uppercase tracking-wider mb-1">Raw Purchases</p>
-          <h3 className="text-2xl font-display font-bold text-genesis-textMain">{fmt(transactions.filter(t => t.category === 'Purchase').reduce((s, t) => s + t.amount, 0))}</h3>
+          <p className="text-[10px] font-bold text-genesis-textSub uppercase tracking-wider mb-1">Drying Income</p>
+          <h3 className="text-2xl font-display font-bold text-genesis-textMain">{fmt(transactions.filter(t => t.category === 'Drying').reduce((s, t) => s + t.amount, 0))}</h3>
+        </div>
+        <div className="bg-white p-6 rounded-[24px] border border-genesis-border shadow-sm">
+          <p className="text-[10px] font-bold text-genesis-textSub uppercase tracking-wider mb-1">Cardamom Dried</p>
+          <h3 className="text-2xl font-display font-bold text-emerald-600">{totalCardamomKG.toLocaleString('en-IN')} KG</h3>
         </div>
         <div className="bg-white p-6 rounded-[24px] border border-genesis-border shadow-sm">
           <p className="text-[10px] font-bold text-genesis-textSub uppercase tracking-wider mb-1">Pending Settlements</p>
@@ -240,13 +246,13 @@ const StoreReport = () => {
                   <td className="py-4 px-8 text-[13px] font-mono text-genesis-textSub">{new Date(tx.date).toLocaleDateString()}</td>
                   <td className="py-4 px-8">
                     <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                      tx.category === 'Income' ? 'bg-green-50 text-green-600' : 'bg-orange-50 text-orange-600'
+                      ['Income', 'Drying'].includes(tx.category) ? 'bg-green-50 text-green-600' : 'bg-orange-50 text-orange-600'
                     }`}>
-                      {tx.category}
+                      {tx.category === 'Income' ? 'Sale' : (tx.category === 'Drying' ? 'Drying' : tx.category)}
                     </span>
                   </td>
                   <td className="py-4 px-8 text-[13px] font-medium text-genesis-textMain">{tx.description}</td>
-                  <td className="py-4 px-8 font-mono font-bold text-[13px]">{tx.category === 'Income' ? '+' : '-'}{fmt(tx.amount)}</td>
+                  <td className="py-4 px-8 font-mono font-bold text-[13px]">{['Income', 'Drying'].includes(tx.category) ? '+' : '-'}{fmt(tx.amount)}</td>
                   <td className="py-4 px-8">
                     <span className="text-[10px] font-bold text-genesis-textSub uppercase tracking-wider">{tx.status}</span>
                   </td>

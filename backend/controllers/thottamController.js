@@ -72,6 +72,14 @@ exports.addLabour = async (req, res) => {
 };
 exports.updateLabour = async (req, res) => {
   try {
+    if (req.body.numberOfWorkers !== undefined || req.body.perHeadAmount !== undefined) {
+      const existing = await Labour.findById(req.params.id);
+      if (existing) {
+        const num = req.body.numberOfWorkers !== undefined ? Number(req.body.numberOfWorkers) : existing.numberOfWorkers;
+        const amt = req.body.perHeadAmount !== undefined ? Number(req.body.perHeadAmount) : existing.perHeadAmount;
+        req.body.totalWage = num * amt;
+      }
+    }
     const labour = await Labour.findByIdAndUpdate(req.params.id, req.body, { new: true });
     res.json(labour);
   } catch (error) { res.status(500).json({ message: error.message }); }

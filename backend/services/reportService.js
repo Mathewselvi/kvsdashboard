@@ -66,7 +66,7 @@ const getReportData = async (filters) => {
       SalesRecord.find(flexQuery).lean(),
       StoreExpense.find(flexQuery).lean(),
       StoreSalary.find(flexQuery).lean(),
-      RawPurchase.find(flexQuery).populate('seller').lean(),
+      RawPurchase.find(flexQuery).lean(),
       StorePayment.find(flexQuery).populate('seller').lean()
     );
   } else {
@@ -105,17 +105,17 @@ const getReportData = async (filters) => {
     ...salesRecords.map(i => ({ date: i.date || i.createdAt, business: 'Store', category: 'Income', description: `Sale - ${i.buyerDetails}`, amount: i.totalAmount || 0, status: 'Completed' })),
     ...storeExpenses.map(i => ({ date: i.date || i.createdAt, business: 'Store', category: 'Expense', description: i.category, amount: i.amount || 0, status: 'Completed' })),
     ...storeSalaries.map(i => ({ date: i.date || i.createdAt, business: 'Store', category: 'Salary', description: `Salary - ${i.employeeName}`, amount: i.amount || 0, status: i.status })),
-    ...rawPurchases.map(i => ({ date: i.date || i.createdAt, business: 'Store', category: 'Purchase', description: `Purchase - ${i.seller?.sellerName || 'Unknown'}`, amount: i.totalAmount || 0, status: i.paymentStatus })),
+    ...rawPurchases.map(i => ({ date: i.date || i.createdAt, business: 'Store', category: 'Drying', description: `Drying - ${i.sellerName || 'Unknown'}`, amount: i.totalAmount || 0, status: i.paymentStatus })),
     ...storePayments.map(i => ({ date: i.date || i.createdAt, business: 'Store', category: 'Expense', description: `Payment to ${i.seller?.sellerName || 'Unknown'}`, amount: i.paidAmount || 0, status: i.status })),
 
-    ...labours.map(i => ({ date: i.date || i.createdAt, business: 'Thottam', category: 'Salary', description: `Labour - ${i.workerName}`, amount: i.totalWage || 0, status: i.status })),
+    ...labours.map(i => ({ date: i.date || i.createdAt, business: 'Thottam', category: 'Salary', description: `Labour - ${i.plantationName} (${i.numberOfWorkers} workers)`, amount: i.totalWage || 0, status: i.status })),
     ...medicineExpenses.map(i => ({ date: i.date || i.createdAt, business: 'Thottam', category: 'Expense', description: i.medicineName, amount: i.cost || 0, status: 'Completed' })),
     ...farmExpenses.map(i => ({ date: i.date || i.createdAt, business: 'Thottam', category: 'Expense', description: i.category, amount: i.amount || 0, status: 'Completed' }))
   ].filter(t => t.date).sort((a, b) => new Date(b.date) - new Date(a.date));
 
   // Calculate Summaries
-  const totalRevenue = transactions.filter(t => t.category === 'Income').reduce((sum, t) => sum + t.amount, 0);
-  const totalExpenses = transactions.filter(t => t.category !== 'Income').reduce((sum, t) => sum + t.amount, 0);
+  const totalRevenue = transactions.filter(t => ['Income', 'Drying'].includes(t.category)).reduce((sum, t) => sum + t.amount, 0);
+  const totalExpenses = transactions.filter(t => !['Income', 'Drying'].includes(t.category)).reduce((sum, t) => sum + t.amount, 0);
   const netProfit = totalRevenue - totalExpenses;
   const pendingDues = transactions.filter(t => ['Pending', 'Partial'].includes(t.status)).reduce((sum, t) => sum + t.amount, 0);
   const paidSettlements = transactions.filter(t => ['Completed', 'Paid', 'Paid'].includes(t.status)).reduce((sum, t) => sum + t.amount, 0);
@@ -125,7 +125,7 @@ const getReportData = async (filters) => {
   transactions.forEach(t => {
     const d = dayjs(t.date).format('YYYY-MM-DD');
     if (!chartData[d]) chartData[d] = { date: d, revenue: 0, expenses: 0, profit: 0 };
-    if (t.category === 'Income') chartData[d].revenue += t.amount;
+    if (['Income', 'Drying'].includes(t.category)) chartData[d].revenue += t.amount;
     else chartData[d].expenses += t.amount;
     chartData[d].profit = chartData[d].revenue - chartData[d].expenses;
   });
@@ -135,7 +135,7 @@ const getReportData = async (filters) => {
   // Business Comparison
   const businessComparison = [
     { name: 'Resort', revenue: transactions.filter(t => t.business === 'Resort' && t.category === 'Income').reduce((s, t) => s + t.amount, 0), expenses: transactions.filter(t => t.business === 'Resort' && t.category !== 'Income').reduce((s, t) => s + t.amount, 0) },
-    { name: 'Store', revenue: transactions.filter(t => t.business === 'Store' && t.category === 'Income').reduce((s, t) => s + t.amount, 0), expenses: transactions.filter(t => t.business === 'Store' && t.category !== 'Income').reduce((s, t) => s + t.amount, 0) },
+    { name: 'Store', revenue: transactions.filter(t => t.business === 'Store' && ['Income', 'Drying'].includes(t.category)).reduce((s, t) => s + t.amount, 0), expenses: transactions.filter(t => t.business === 'Store' && !['Income', 'Drying'].includes(t.category)).reduce((s, t) => s + t.amount, 0) },
     { name: 'Thottam', revenue: 0, expenses: transactions.filter(t => t.business === 'Thottam' && t.category !== 'Income').reduce((s, t) => s + t.amount, 0) }
   ];
 

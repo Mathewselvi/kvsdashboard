@@ -109,6 +109,13 @@ const generateExcelReport = async (data, filters) => {
   summarySheet.addRow({ metric: 'TOTAL PENDING DUES', value: data.summary.pendingDues || 0 });
   summarySheet.addRow({ metric: 'TOTAL SETTLED CAPITAL', value: data.summary.paidSettlements || 0 });
 
+  let totalCardamomKG = 0;
+  if (data.raw && data.raw.rawPurchases && data.raw.rawPurchases.length > 0) {
+    totalCardamomKG = data.raw.rawPurchases.reduce((s, p) => s + (p.rawWeightKG || 0), 0);
+  }
+  const cardamomRow = summarySheet.addRow({ metric: 'TOTAL CARDAMOM PURCHASED (KG)', value: totalCardamomKG.toLocaleString('en-IN') + ' KG' });
+  cardamomRow.getCell(2).alignment = { horizontal: 'right' };
+
   // Apply styling to Overview Summary
   styleTableSheet(summarySheet, 'FF1E293B'); // Slate Dark Blue
 
@@ -242,9 +249,9 @@ const generateExcelReport = async (data, filters) => {
       data.raw.rawPurchases.forEach(p => {
         const pending = (p.totalAmount || 0) - (p.advancePayment || 0) - (p.remainingPaid || 0);
         sheet.addRow({ 
-          type: 'PURCHASE', 
+          type: 'DRYING', 
           date: dayjs(p.date || p.createdAt).format('YYYY-MM-DD'), 
-          name: p.seller?.sellerName || 'Unknown', 
+          name: p.sellerName || 'Unknown', 
           desc: `Weight: ${p.rawWeightKG}kg @ ₹${p.ratePerKG}/kg`, 
           amount: p.totalAmount || 0, 
           paid: (p.advancePayment || 0) + (p.remainingPaid || 0), 
@@ -302,7 +309,7 @@ const generateExcelReport = async (data, filters) => {
     // Labour
     if (data.raw.labours && data.raw.labours.length > 0) {
       data.raw.labours.forEach(l => {
-        sheet.addRow({ type: 'LABOUR', date: dayjs(l.date || l.createdAt).format('YYYY-MM-DD'), name: l.workerName, desc: `Wages`, yield: '-', amount: l.totalWage || 0, status: l.status });
+        sheet.addRow({ type: 'LABOUR', date: dayjs(l.date || l.createdAt).format('YYYY-MM-DD'), name: l.workerName || 'Group Labour', desc: `Qty: ${l.numberOfWorkers} workers @ ₹${l.perHeadAmount}/head`, yield: '-', amount: l.totalWage || 0, status: l.status });
         rowCount++;
       });
     }

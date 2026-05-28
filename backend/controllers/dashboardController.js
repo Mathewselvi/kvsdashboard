@@ -38,8 +38,9 @@ const getDashboardSummary = async (req, res) => {
 
     // ── INCOME ────────────────────────────────────────────────────────────────
     const resortIncome = sum(resortIncomes, 'amount');
-    const storeIncome  = sum(salesRecords,  'totalAmount');
-    const totalIncome  = resortIncome + storeIncome;
+    const storeSalesIncome = sum(salesRecords, 'totalAmount');
+    const dryingIncome = sum(rawPurchases, 'totalAmount');
+    const totalIncome  = resortIncome + storeSalesIncome + dryingIncome;
 
     // ── EXPENSES ──────────────────────────────────────────────────────────────
     const resortExpenses =
@@ -78,9 +79,9 @@ const getDashboardSummary = async (req, res) => {
     };
 
     const store = {
-      income:            storeIncome,
+      income:            storeSalesIncome,
+      rawPurchasesTotal: dryingIncome,
       expenses:          storeExpensesTotal,
-      rawPurchasesTotal: sum(rawPurchases, 'totalAmount'),
       pendingPayments,
     };
 
@@ -110,7 +111,8 @@ const getDashboardSummary = async (req, res) => {
     const monthlyData = months.map(({ year, month, label }) => {
       const income =
         resortIncomes.filter(r => inMonth(r.date, year, month)).reduce((a, c) => a + c.amount, 0) +
-        salesRecords.filter(r  => inMonth(r.date, year, month)).reduce((a, c) => a + (c.totalAmount || 0), 0);
+        salesRecords.filter(r  => inMonth(r.date, year, month)).reduce((a, c) => a + (c.totalAmount || 0), 0) +
+        rawPurchases.filter(r  => inMonth(r.date, year, month)).reduce((a, c) => a + (c.totalAmount || 0), 0);
 
       const expenses =
         otherExpenses.filter(r    => inMonth(r.date, year, month)).reduce((a, c) => a + c.amount, 0) +
@@ -128,13 +130,14 @@ const getDashboardSummary = async (req, res) => {
     const recentTransactions = [
       ...resortIncomes.map(r    => ({ type: 'Income',  module: 'Beyond Heaven', amount: r.amount,       date: r.date,      desc: r.source })),
       ...salesRecords.map(r     => ({ type: 'Income',  module: 'Store',         amount: r.totalAmount,  date: r.date,      desc: `Sale — ${r.buyerDetails}` })),
+      ...rawPurchases.map(r     => ({ type: 'Income',  module: 'Store',         amount: r.totalAmount,  date: r.date,      desc: `Drying — ${r.sellerName}` })),
       ...otherExpenses.map(r    => ({ type: 'Expense', module: 'Beyond Heaven', amount: r.amount,       date: r.date,      desc: r.category })),
       ...utilityBills.map(r     => ({ type: 'Expense', module: 'Beyond Heaven', amount: r.amount,       date: r.createdAt, desc: `${r.billType} Bill` })),
       ...staffSalaries.map(r    => ({ type: 'Expense', module: 'Beyond Heaven', amount: r.salaryAmount, date: r.createdAt, desc: `Salary — ${r.employeeName}` })),
       ...laundries.map(r        => ({ type: 'Expense', module: 'Beyond Heaven', amount: r.cost,         date: r.date,      desc: `Laundry — ${r.vendorName}` })),
       ...storeExpenses.map(r    => ({ type: 'Expense', module: 'Store',         amount: r.amount,       date: r.date,      desc: r.category })),
       ...storeSalaries.map(r    => ({ type: 'Expense', module: 'Store',         amount: r.amount,       date: r.date,      desc: `Salary — ${r.employeeName}` })),
-      ...labours.map(r          => ({ type: 'Expense', module: 'Thottam',       amount: r.totalWage,    date: r.date,      desc: `Labour — ${r.workerName}` })),
+      ...labours.map(r          => ({ type: 'Expense', module: 'Thottam',       amount: r.totalWage,    date: r.date,      desc: `Labour — ${r.plantationName} (${r.numberOfWorkers} workers)` })),
       ...medicineExpenses.map(r => ({ type: 'Expense', module: 'Thottam',       amount: r.cost,         date: r.date,      desc: r.medicineName })),
       ...farmExpenses.map(r     => ({ type: 'Expense', module: 'Thottam',       amount: r.amount,       date: r.date,      desc: r.category })),
     ]

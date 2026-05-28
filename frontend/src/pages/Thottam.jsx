@@ -113,7 +113,7 @@ const Thottam = () => {
 
   const openAddModal  = ()     => { 
     if (activeTab === 'labour') {
-      setFormData({ dailyWage: defaultWage, status: 'Pending' });
+      setFormData({ perHeadAmount: defaultWage, numberOfWorkers: 10, status: 'Pending' });
     } else {
       setFormData({});
     }
@@ -133,7 +133,7 @@ const Thottam = () => {
       case 'sales':
         return match(row.plantationName, row.buyerDetails, row.sellingQuantityKG, row.sellingPricePerKG, row.totalAmount, fmtD(row.date));
       case 'labour':
-        return match(row.workerName, row.plantationName, row.dailyWage, row.daysWorked, row.totalWage, row.status, fmtD(row.date));
+        return match(row.workerName, row.plantationName, row.numberOfWorkers, row.perHeadAmount, row.totalWage, row.status, fmtD(row.date));
       case 'medicine':
         return match(row.plantationName, row.medicineName, row.category, row.cost, fmtD(row.date));
       case 'farmexpense':
@@ -148,7 +148,7 @@ const Thottam = () => {
     switch (activeTab) {
       case 'collections': return ['Date', 'Plantation', 'Raw (KG)', 'Dry (KG)', 'Actions'];
       case 'sales':       return ['Date', 'Plantation', 'Buyer', 'Qty (KG)', 'Rate/KG', 'Total', 'Actions'];
-      case 'labour':      return ['Date', 'Worker', 'Plantation', 'Days', 'Wage/Day', 'Total Wage', 'Status', 'Actions'];
+      case 'labour':      return ['Date', 'Group/Worker Name', 'Plantation', 'No. of Workers', 'Amount/Head', 'Total Wage', 'Status', 'Actions'];
       case 'medicine':    return ['Date', 'Plantation', 'Medicine', 'Category', 'Cost', 'Actions'];
       case 'farmexpense': return ['Date', 'Plantation', 'Category', 'Amount', 'Description', 'Actions'];
       default:            return [];
@@ -200,10 +200,10 @@ const Thottam = () => {
         return (
           <tr key={item._id} className="border-b border-genesis-border hover:bg-gray-50/50">
             <td className="py-4 px-6 text-[14px] font-mono text-genesis-textSub">{fmtDate(item.date)}</td>
-            <td className="py-4 px-6 text-[14px] font-medium text-genesis-textMain">{item.workerName}</td>
+            <td className="py-4 px-6 text-[14px] font-medium text-genesis-textMain">{item.workerName || 'Group Labour'}</td>
             <td className="py-4 px-6 text-[14px] text-genesis-textSub">{item.plantationName || '—'}</td>
-            <td className="py-4 px-6 text-[14px] font-bold text-genesis-textMain">{item.daysWorked}</td>
-            <td className="py-4 px-6 text-[14px] text-genesis-textSub">{fmt(item.dailyWage)}</td>
+            <td className="py-4 px-6 text-[14px] font-bold text-genesis-textMain">{item.numberOfWorkers}</td>
+            <td className="py-4 px-6 text-[14px] text-genesis-textSub">{fmt(item.perHeadAmount)}</td>
             <td className="py-4 px-6 text-[14px] font-bold text-genesis-textMain">{fmt(item.totalWage)}</td>
             <td className="py-4 px-6"><StatusBadge status={item.status} /></td>
             <td className="py-4 px-6">{actionButtons}</td>
@@ -302,7 +302,7 @@ const Thottam = () => {
           <div key={item._id} className="p-4 space-y-2.5 bg-white">
             <div className="flex justify-between items-center">
               <div>
-                <p className="font-semibold text-genesis-textMain text-[15px]">{item.workerName}</p>
+                <p className="font-semibold text-genesis-textMain text-[15px]">{item.workerName || 'Group Labour'}</p>
                 <p className="text-[12px] font-mono text-genesis-textSub mt-0.5">{fmtDate(item.date)}</p>
               </div>
               <StatusBadge status={item.status} />
@@ -313,7 +313,7 @@ const Thottam = () => {
             </div>
             <div className="flex justify-between text-[13px]">
               <span className="text-genesis-textSub">Wages</span>
-              <span className="font-medium text-genesis-textMain">{item.daysWorked} days @ {fmt(item.dailyWage)}/day</span>
+              <span className="font-medium text-genesis-textMain">{item.numberOfWorkers} workers @ {fmt(item.perHeadAmount)}/head</span>
             </div>
             <div className="flex justify-between text-[13px]">
               <span className="text-genesis-textSub">Total Wage</span>
@@ -467,14 +467,14 @@ const Thottam = () => {
       }
 
       case 'labour': {
-        const totalWage = (formData.dailyWage || 0) * (formData.daysWorked || 0);
+        const totalWage = (formData.numberOfWorkers || 0) * (formData.perHeadAmount || 0);
         return (
           <>
-            <div><label className={labelClass}>Worker Name</label><input type="text" name="workerName" value={formData.workerName || ''} required onChange={handleInputChange} className={inputClass} placeholder="e.g. Rajan" /></div>
+            <div><label className={labelClass}>Group / Worker Name (Optional)</label><input type="text" name="workerName" value={formData.workerName || ''} onChange={handleInputChange} className={inputClass} placeholder="e.g. Harvesting Crew" /></div>
             <PlantationSelect />
             <div className="grid grid-cols-1 xs:grid-cols-2 gap-4">
-              <div><label className={labelClass}>Daily Wage (₹)</label><input type="number" name="dailyWage" value={formData.dailyWage || ''} required onChange={handleInputChange} className={inputClass} placeholder="0" /></div>
-              <div><label className={labelClass}>Days Worked</label><input type="number" name="daysWorked" value={formData.daysWorked || ''} required min="1" onChange={handleInputChange} className={inputClass} placeholder="1" /></div>
+              <div><label className={labelClass}>Number of Workers</label><input type="number" name="numberOfWorkers" value={formData.numberOfWorkers || ''} required min="1" onChange={handleInputChange} className={inputClass} placeholder="10" /></div>
+              <div><label className={labelClass}>Per Head Amount (₹)</label><input type="number" name="perHeadAmount" value={formData.perHeadAmount || ''} required onChange={handleInputChange} className={inputClass} placeholder="500" /></div>
             </div>
             {totalWage > 0 && (
               <div className="bg-gray-50 border border-genesis-border rounded-lg p-4">

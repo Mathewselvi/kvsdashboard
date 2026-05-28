@@ -166,16 +166,16 @@ const Dashboard = () => {
           </div>
           <div className="space-y-2">
             <div className="flex justify-between items-center">
-              <span className="text-[12px] text-genesis-textSub">Sales Income</span>
+              <span className="text-[12px] text-genesis-textSub">Cardamom Sales</span>
               <span className="text-[12.5px] font-bold text-genesis-success">{fmtFull(store.income)}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-[12px] text-genesis-textSub">Raw Purchases</span>
-              <span className="text-[12.5px] font-semibold text-genesis-textMain">{fmtFull(store.rawPurchasesTotal)}</span>
+              <span className="text-[12px] text-genesis-textSub">Drying Income</span>
+              <span className="text-[12.5px] font-bold text-genesis-success">{fmtFull(store.rawPurchasesTotal)}</span>
             </div>
             <div className="h-px bg-genesis-border" />
             <div className="flex justify-between items-center">
-              <span className="text-[12px] font-semibold text-genesis-textSub">Balance Due</span>
+              <span className="text-[12px] font-semibold text-genesis-textSub">Pending Drying Dues</span>
               <span className={`text-[12.5px] font-bold ${(store.pendingPayments || 0) > 0 ? 'text-genesis-warning' : 'text-genesis-textSub'}`}>
                 {fmtFull(store.pendingPayments)}
               </span>
@@ -283,7 +283,7 @@ const Dashboard = () => {
             <div className="bg-white/10 rounded-xl px-4 py-3 backdrop-blur-sm">
               <div className="flex items-center gap-2 mb-0.5">
                 <IndianRupee size={13} className="text-indigo-200" />
-                <p className="text-[11px] font-bold text-indigo-200 uppercase tracking-wider">Purchase Balances</p>
+                <p className="text-[11px] font-bold text-indigo-200 uppercase tracking-wider">Drying Dues</p>
               </div>
               <p className="text-[20px] font-display font-bold text-white">{fmtFull(pendingPayments)}</p>
             </div>
